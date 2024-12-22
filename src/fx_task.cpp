@@ -33,7 +33,7 @@ FxTask::FxTask(std::string name, std::string computeShaderPath, std::vector<std:
 }
 
 FxTask::~FxTask(){
-    fmt::print("Hello");
+    fmt::print("Deleting task {}\n", this->name);
     if (this->shader != nullptr)
         delete this->shader;
 

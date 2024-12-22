@@ -33,8 +33,8 @@ struct FxNode {
 class FxGraph {
 
     public:
-    std::vector<FxTask> tasks;
-    std::vector<FxNode> nodes;
+    std::vector<FxTask*> tasks;
+    std::vector<FxNode*> nodes;
 
     FxGraph();
     ~FxGraph();

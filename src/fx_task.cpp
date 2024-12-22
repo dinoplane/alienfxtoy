@@ -7,7 +7,17 @@
 
 FxTask::FxTask(std::string name, std::string computeShaderPath, bool isInputTask){
     this->name = name;
-    this->shader = new ComputeShader(computeShaderPath.c_str());
+    if (isInputTask){
+        this->inputs.push_back(FxTask::loadImage(computeShaderPath));
+        this->shader = nullptr;
+    } else {
+        // I was at odds as to what to use here
+        // To process textures, there are 2 ways
+        // 1. Use a compute shader (flexible but complicated, the shaders must be written in a certain way)
+        // 2. Render a big fat triangle and a fragment shader (I pay in vertex pipeline overhead, but shaders are easier to write)
+        // I chose the compute shader because it is more flexible
+        this->shader = new ComputeShader(computeShaderPath.c_str());
+    }
 }
 
 FxTask::FxTask(std::string name, std::string computeShaderPath, std::vector<std::string> texturePaths){
@@ -23,15 +33,16 @@ FxTask::FxTask(std::string name, std::string computeShaderPath, std::vector<std:
 }
 
 FxTask::~FxTask(){
+    fmt::print("Hello");
     if (this->shader != nullptr)
         delete this->shader;
 
-    for (GLuint texture : this->textures){
-        glDeleteTextures(1, &texture);
+    for (Texture texture : this->textures){
+        glDeleteTextures(1, &texture.id);
     }
 
-    for (GLuint texture : this->inputs){
-        glDeleteTextures(1, &texture);
+    for (Texture texture : this->inputs){
+        glDeleteTextures(1, &texture.id);
     }
 }
 
@@ -47,10 +58,10 @@ void FxTask::run(GLuint inTexture, GLuint outTexture){
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-GLuint FxTask::loadImage(std::string texturePath){
+Texture FxTask::loadImage(std::string texturePath){
     // load image
     int width, height, nrChannels;
-    unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 4);
 
     GLuint texture = 0;
 
@@ -72,5 +83,5 @@ GLuint FxTask::loadImage(std::string texturePath){
     {
         fmt::print("Failed to load texture\n");
     }
-    return texture;
+    return {texture, texturePath, (GLuint)width, (GLuint)height, (GLuint)nrChannels};
 }

@@ -1,0 +1,314 @@
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/random.hpp>
+
+#include <shader_s.hpp>
+#include <renderer.hpp>
+
+#include <vector>
+#include <cstdlib>
+#include <thread>
+#include <barrier>
+#include <chrono>
+#include <cassert>
+
+#include "stb_image.h"
+
+#include <iostream>
+#include <fstream>
+#include <fmt/core.h>
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <concepts>
+
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+
+// settings
+const unsigned int SCR_WIDTH = 1000;
+const unsigned int SCR_HEIGHT = 600;
+
+const size_t RENDERER_SIDE = 1;
+const size_t RENDERER_COUNT = RENDERER_SIDE * RENDERER_SIDE;
+
+// // timing
+double currentFrame = 0.0;
+double deltaTime = 0.0; // time between current frame and last frame
+double lastFrame = 0.0;
+double totalTime = 0.0;
+uint32_t frameCount = 0;
+
+uint32_t currRendererIdx = 0;
+std::string scenePath;
+
+std::string cameraSettingsPath = "camera_settings.txt";
+
+void setupCmdArgs(int argc, char **argv)
+{
+    if (argc == 2)
+    {
+        scenePath = argv[1];
+    }
+    else scenePath = "./scene/blank.scn";
+}
+int createGLFWwindow(GLFWwindow *&window, const char *windowName)
+{
+    // glfw window creation
+    // --------------------
+
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, windowName, NULL, NULL);
+    if (window == NULL)
+    {
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    // glfwSwapInterval(1); // Enable vsync
+    return 0;
+}
+
+static void error_callback(int error, const char *description)
+{
+    fprintf(stderr, "Error: %s\n", description);
+}
+
+int setupGLFW()
+{
+    // glfw: initialize and configure
+    // ------------------------------
+
+    glfwSetErrorCallback(error_callback);
+
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+#ifdef __APPLE__ 
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+#endif
+
+    return 1;
+}
+
+int setupGLAD()
+{
+    // glad: load all OpenGL function pointers
+    // ---------------------------------------
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+    {
+        return;
+    }
+
+}
+
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+
+}
+
+void message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const *message, void const *user_param)
+{
+    auto const src_str = [source]()
+    {
+        switch (source)
+        {
+        case GL_DEBUG_SOURCE_API:
+            return "API";
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            return "WINDOW SYSTEM";
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            return "SHADER COMPILER";
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            return "THIRD PARTY";
+        case GL_DEBUG_SOURCE_APPLICATION:
+            return "APPLICATION";
+        case GL_DEBUG_SOURCE_OTHER:
+            return "OTHER";
+        }
+    }();
+
+    auto const type_str = [type]()
+    {
+        switch (type)
+        {
+        case GL_DEBUG_TYPE_ERROR:
+            return "ERROR";
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            return "DEPRECATED_BEHAVIOR";
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            return "UNDEFINED_BEHAVIOR";
+        case GL_DEBUG_TYPE_PORTABILITY:
+            return "PORTABILITY";
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            return "PERFORMANCE";
+        case GL_DEBUG_TYPE_MARKER:
+            return "MARKER";
+        case GL_DEBUG_TYPE_OTHER:
+            return "OTHER";
+        }
+    }();
+
+    auto const severity_str = [severity]()
+    {
+        switch (severity)
+        {
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            return "NOTIFICATION";
+        case GL_DEBUG_SEVERITY_LOW:
+            return "LOW";
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            return "MEDIUM";
+        case GL_DEBUG_SEVERITY_HIGH:
+            return "HIGH";
+        }
+    }();
+    // std::cout << src_str << ", " << type_str << ", " << severity_str << ", " << id << ": " << message << '\n';
+}
+
+int main(int argc, char **argv)
+{
+
+    GLFWwindow *window;
+    if (setupGLFW() < 0)
+    {
+        return -1;
+    }
+
+    if (createGLFWwindow(window, "AlienGLRenderer") < 0)
+    {
+        return -1;
+    }
+
+    if (setupGLAD() < 0)
+    {
+        return -1;
+    }
+
+    setupCmdArgs(argc, argv);
+
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetKeyCallback(window, key_callback);
+
+    glfwMakeContextCurrent(window);
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(message_callback, nullptr);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE);
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsLight(); // Light users BLEH
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    const char *glsl_version = "#version 460";
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    bool show_demo_window = true;
+    bool show_another_window = false;
+    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    glfwMaximizeWindow(window);
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+
+    framebuffer_size_callback(window, width, height);
+
+    int sideLen = 1;
+    while (!glfwWindowShouldClose(window))
+    {
+        {
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
+            if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);
+
+            // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+            {
+                ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+                ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", deltaTime * 1000.0f, 1.0f / deltaTime);
+                ImGui::Text("Current Time: %.3f", totalTime);
+                ImGui::Text("Frame Count: %d", frameCount);
+                int currRenderer = 0;
+                int currCam = 0;
+
+                static char buf2[32] = "";
+                ImGui::InputText("decimal", buf2, 32, ImGuiInputTextFlags_CharsDecimal);
+
+                ImGui::End();
+            }
+
+            // Rendering
+            ImGui::Render();
+            int display_w, display_h;
+            glfwGetFramebufferSize(window, &display_w, &display_h);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+            totalTime += deltaTime;
+            ++frameCount;
+        }
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    // ------------------------------------------------------------------
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+
+    glfwTerminate();
+
+    return 0;
+}
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+
+void framebuffer_size_callback(GLFWwindow *window, int w, int h)
+{
+    // make sure the viewport matches the new window dimensions; note that w and
+    // h will be significantly larger than specified on retina displays.
+    glViewport(0, 0, w, h);
+}

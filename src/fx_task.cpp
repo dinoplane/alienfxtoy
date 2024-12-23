@@ -1,5 +1,5 @@
 #include <fx_task.hpp>
-
+/*
 #include <fmt/core.h>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -7,6 +7,7 @@
 
 FxTask::FxTask(std::string name, std::string computeShaderPath, bool isInputTask){
     this->name = name;
+    this->isInputTask = isInputTask;
     if (isInputTask){
         this->inputs.push_back(FxTask::loadImage(computeShaderPath));
         this->shader = nullptr;
@@ -22,6 +23,7 @@ FxTask::FxTask(std::string name, std::string computeShaderPath, bool isInputTask
 
 FxTask::FxTask(std::string name, std::string computeShaderPath, std::vector<std::string> texturePaths){
     this->name = name;
+    this->isInputTask = false;
     this->shader = new ComputeShader(computeShaderPath.c_str());
     for (
         std::vector<std::string>::iterator it = texturePaths.begin();
@@ -85,3 +87,5 @@ Texture FxTask::loadImage(std::string texturePath){
     }
     return {texture, texturePath, (GLuint)width, (GLuint)height, (GLuint)nrChannels};
 }
+
+*/

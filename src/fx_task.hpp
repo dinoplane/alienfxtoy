@@ -12,8 +12,36 @@ struct Texture {
     GLuint channels;
 };
 
+enum  FxTaskType {
+    Empty,
+    Load,
+    Compute,
+    MAX_TYPES = Compute
+};
+
+
+const static  char* FxTaskNames[] {"Empty", "Load", "Compute"};
+
 class FxTask {
+    public:
+    FxTaskType type;
+    FxTask(FxTaskType type) : type(type) {}
+    virtual void RunTask();
+};
+
+class FxLoadTask : public FxTask {
+    public:
+    Texture loadedTexture;
+    std::string texturePath;
+    FxLoadTask(std::string texturePath) : FxTask(FxTaskType::Load), texturePath(texturePath) {}
+
+    
+};
+
+    /*
+    public:
     std::string name;
+    bool isInputTask;
     ComputeShader* shader;
     std::vector<Texture> inputs; // these are for textures loaded for input
     std::vector<Texture> textures; // these are for textures used by the compute shader
@@ -52,8 +80,16 @@ class FxTask {
 
 
     ~FxTask();
-    void run(GLuint inTexture, GLuint outTexture);
+    virtual void run(GLuint inTexture, GLuint outTexture);
     static Texture loadImage(std::string texturePath); // this function could be used internally (for compute shader inputs) or externally (for loading input textures)
 };
 
+
+
+class FxComputeTask : public FxTask {
+    public:
+    FxComputeTask(std::string name, std::string computeShaderPath);
+    FxComputeTask(std::string name, std::string computeShaderPath, std::vector<std::string> texturePaths);
+};
+*/
 #endif

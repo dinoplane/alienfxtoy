@@ -22,7 +22,9 @@
 #undef main
 
 
+struct GraphUIState {
 
+};
 
 int setupGLAD()
 {
@@ -39,9 +41,57 @@ int setupGLAD()
 
 
 static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
-   ImGui::Begin(fmt::format("Node {}", idx).c_str());
-   ImGui::Text("HALLO FrEND");
-   ImGui::End();
+    ImGui::Begin(fmt::format("Node {}", idx).c_str());
+
+    const FxTaskType selectedTaskType = (graph.nodes[idx].task == nullptr) ? FxTaskType::Empty : graph.nodes[idx].task->type;
+    if (ImGui::BeginCombo("Task", FxTaskNames[selectedTaskType])){
+        int item_selected_idx = -1;
+        for (int n = 0; n < FxTaskType::MAX_TYPES + 1; ++n)
+        {
+            const bool is_selected = (graph.nodes[idx].task == nullptr && n == 0) || (graph.nodes[idx].task != nullptr  && n == graph.nodes[idx].task->type);
+            if (ImGui::Selectable(FxTaskNames[n], is_selected))
+                item_selected_idx = n;
+
+            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+            if (is_selected)
+                ImGui::SetItemDefaultFocus();
+        }
+        if (item_selected_idx != -1){
+            if (graph.nodes[idx].task != nullptr){
+                delete graph.nodes[idx].task;
+            }
+
+            if (item_selected_idx == 0){
+                graph.nodes[idx].task = nullptr;
+            } else {
+                graph.nodes[idx].task = new FxTask((FxTaskType) item_selected_idx);
+            }
+        }
+        // graph.SetNodeTask(idx, &graph.tasks[idx]);
+        ImGui::EndCombo();
+    }
+
+    switch (selectedTaskType) {
+
+        case FxTaskType::Compute:
+            break;
+
+        case FxTaskType::Load:
+            break;
+    
+    };
+
+
+    for (size_t i = 0; i < graph.nodes[idx].outputs.size(); i++){
+        ImGui::Text(fmt::format("To Node {}", graph.nodes[idx].outputs[i]).c_str());
+    }
+    // ImGui::InputText("Add Output", buf, 32, ImGuiInputTextFlags_CharsDecimal);
+
+    if (ImGui::Button("+")){
+        // size_t output = std::stoul(buf);
+        graph.addConnection(idx, 1);
+    }
+    ImGui::End();
 
 }
 
@@ -51,6 +101,12 @@ static void RenderFxGraphWindow(FxGraph& graph){
    for (size_t i = 0; i < graph.nodes.size(); i++){
        RenderFxNodeWindow(graph, i);
    }
+   ImGui::Begin("Graph");
+   if (ImGui::Button("Add Node")){
+       graph.AddNode();
+   }
+   ImGui::End();
+
 //    ImGui::End();
 }
 
@@ -204,6 +260,8 @@ int main(int, char**)
             ImGui::Text("counter = %d", counter);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+            
+            
             ImGui::End();
         }
 

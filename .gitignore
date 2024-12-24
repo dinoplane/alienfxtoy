@@ -420,7 +420,7 @@ CMakeUserPresets.json
 /vendor/*/deprecated
 
 
-
+.cmake
 /build
 /out/*
 *.exe

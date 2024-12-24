@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <fmt/core.h>
 #include <fxgraph.hpp>
+#include <fx_task.hpp>
 
 
 #include "imgui.h"
@@ -42,44 +43,47 @@ int setupGLAD()
 
 static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
     ImGui::Begin(fmt::format("Node {}", idx).c_str());
+    FxNode& node = graph.nodes[idx];
+    FxTask* nodeFxTask = graph.nodes[idx].task;
 
-    const FxTaskType selectedTaskType = (graph.nodes[idx].task == nullptr) ? FxTaskType::Empty : graph.nodes[idx].task->type;
-    if (ImGui::BeginCombo("Task", FxTaskNames[selectedTaskType])){
+    const FxTask::FxTaskType selectedTaskType = (nodeFxTask == nullptr) ? FxTask::FxTaskType::Empty : nodeFxTask->type;
+    if (ImGui::BeginCombo("Task", FxTask::FxTaskNames[selectedTaskType])){
         int item_selected_idx = -1;
-        for (int n = 0; n < FxTaskType::MAX_TYPES + 1; ++n)
+        for (int n = 0; n < FxTask::FxTaskType::MAX_TYPES + 1; ++n)
         {
-            const bool is_selected = (graph.nodes[idx].task == nullptr && n == 0) || (graph.nodes[idx].task != nullptr  && n == graph.nodes[idx].task->type);
-            if (ImGui::Selectable(FxTaskNames[n], is_selected))
+            const bool is_selected = (nodeFxTask == nullptr && n == 0) || (nodeFxTask != nullptr  && n == nodeFxTask->type);
+            if (ImGui::Selectable(FxTask::FxTaskNames[n], is_selected))
                 item_selected_idx = n;
 
             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
             if (is_selected)
                 ImGui::SetItemDefaultFocus();
         }
-        if (item_selected_idx != -1){
+        if (item_selected_idx > -1){
             if (graph.nodes[idx].task != nullptr){
                 delete graph.nodes[idx].task;
             }
-
-            if (item_selected_idx == 0){
-                graph.nodes[idx].task = nullptr;
-            } else {
-                graph.nodes[idx].task = new FxTask((FxTaskType) item_selected_idx);
-            }
+            graph.nodes[idx].task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
         }
         // graph.SetNodeTask(idx, &graph.tasks[idx]);
         ImGui::EndCombo();
     }
 
-    switch (selectedTaskType) {
+    if (node.task != nullptr){
+        switch (node.task->type) {
 
-        case FxTaskType::Compute:
-            break;
+            case FxTask::FxTaskType::Compute:
+                break;
 
-        case FxTaskType::Load:
-            break;
-    
-    };
+            case FxTask::FxTaskType::Load:
+            {
+                FxLoadTask* loadFxTask = static_cast<FxLoadTask*>(nodeFxTask);
+                ImGui::Text(fmt::format("Loaded Image: {}", loadFxTask->GetTexturePath()).c_str());
+
+            } break;
+        
+        };
+    }
 
 
     for (size_t i = 0; i < graph.nodes[idx].outputs.size(); i++){

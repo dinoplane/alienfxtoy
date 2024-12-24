@@ -1,4 +1,55 @@
 #include <fx_task.hpp>
+#include <fmt/core.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
+const char* FxTask::FxTaskNames[] {"Empty", "Load", "Compute"};
+
+FxTask* FxTask::CreateTask(FxTaskType type){
+    FxTask* ret;
+    switch (type) {
+        case Empty:
+            ret = nullptr;
+            break;
+        case Load:
+            ret = new FxLoadTask();
+            break;
+        case Compute:
+            ret = nullptr;
+            break;
+    }
+    return ret;
+}
+
+bool FxLoadTask::LoadTexture(){
+    Texture newTexture = FxTask::LoadImage(texturePath);
+
+    if (newTexture.isValid){
+        if (isTextureLoaded){
+            ClearTexture();
+        }
+
+        loadedTexture = newTexture;
+        isTextureLoaded = true;
+    } 
+    return isTextureLoaded;
+}
+
+
+
+
+void FxLoadTask::ClearTexture(){
+    isTextureLoaded = false;
+    glDeleteTextures(1, &loadedTexture.id);
+}
+
+FxLoadTask::~FxLoadTask(){
+    if (isTextureLoaded){
+        ClearTexture();
+    }
+}
+
 /*
 #include <fmt/core.h>
 
@@ -60,14 +111,17 @@ void FxTask::run(GLuint inTexture, GLuint outTexture){
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
-Texture FxTask::loadImage(std::string texturePath){
+*/
+
+
+Texture FxTask::LoadImage(std::string texturePath){
     // load image
     int width, height, nrChannels;
     unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 4);
 
     GLuint texture = 0;
 
-
+    bool isValid = false;
     if (data)
     {
         glCreateTextures(GL_TEXTURE_2D, 1, &texture);
@@ -80,12 +134,11 @@ Texture FxTask::loadImage(std::string texturePath){
         glTextureSubImage2D(texture, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
         
         stbi_image_free(data);
+        isValid = true;
     }
     else
     {
         fmt::print("Failed to load texture\n");
     }
-    return {texture, texturePath, (GLuint)width, (GLuint)height, (GLuint)nrChannels};
+    return {texture, (GLuint)width, (GLuint)height, (GLuint)nrChannels, isValid};
 }
-
-*/

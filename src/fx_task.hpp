@@ -6,36 +6,47 @@
 
 struct Texture {
     GLuint id;
-    std::string path;
     GLuint width;
     GLuint height;
     GLuint channels;
-};
-
-enum  FxTaskType {
-    Empty,
-    Load,
-    Compute,
-    MAX_TYPES = Compute
+    bool isValid;
 };
 
 
-const static  char* FxTaskNames[] {"Empty", "Load", "Compute"};
 
 class FxTask {
     public:
+    
+    enum FxTaskType {
+        Empty,
+        Load,
+        Compute,
+        MAX_TYPES = Compute
+    };
+
+    static const char* FxTaskNames[];
+    static Texture LoadImage(std::string texturePath);
+    static FxTask* CreateTask(FxTaskType type);
+
     FxTaskType type;
     FxTask(FxTaskType type) : type(type) {}
-    virtual void RunTask();
+    // virtual void RunTask();
 };
 
 class FxLoadTask : public FxTask {
+    
     public:
     Texture loadedTexture;
+    bool isTextureLoaded;
     std::string texturePath;
-    FxLoadTask(std::string texturePath) : FxTask(FxTaskType::Load), texturePath(texturePath) {}
-
     
+    FxLoadTask() : FxTask(FxTaskType::Load), texturePath(""), isTextureLoaded(false), loadedTexture({0, 0, 0, 0, false}) {}
+    ~FxLoadTask();
+    
+    std::string GetTexturePath() { return texturePath; }
+    void SetTexturePath(std::string newPath ) { texturePath = newPath; }
+    bool LoadTexture();
+    void ClearTexture();
 };
 
     /*

@@ -1,5 +1,5 @@
 #include <fxgraph.hpp>
-
+#include <algorithm>
 
 Graph::Graph() { fmt::print("HIYA"); }
 

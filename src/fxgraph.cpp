@@ -3,11 +3,16 @@
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 
 Graph::Graph() { fmt::print("HIYA"); }
 
 FxGraph::FxGraph(){
-    
+    glCreateBuffers(1, &PBO);
+
+
     // // FxTask task1("default", "./assets/shader/default.glsl");
     // tasks.push_back(new FxTask ("baka", "./assets/texture/baka.jpg", true) );
     // tasks.push_back(new FxTask ("default", "./assets/shader/default.glsl") );
@@ -29,6 +34,8 @@ FxGraph::FxGraph(){
 
 FxGraph::~FxGraph(){
     for (auto& node : nodes){
+        if (node->task != nullptr)
+            delete node->task;
         delete node;
     }
 
@@ -36,6 +43,7 @@ FxGraph::~FxGraph(){
     // for (auto& task : tasks){
     //     delete task;
     // }
+    glDeleteBuffers(1, &PBO);
 }
 
 void FxGraph::AddNode(){
@@ -127,6 +135,30 @@ void FxGraph::RunGraph(){
 
     fmt::print(debuglog, "Running Compute Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
     currNode->task->RunTask(input);
+
+    GLuint imageSize = input.width * input.height * 4;
+    GLubyte* data = new GLubyte[imageSize];
+    // glGetTextureImage(input.outputTexture, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageSize * sizeof(GLubyte), data);
+    glNamedBufferData(PBO, imageSize * sizeof(GLubyte), NULL,GL_STREAM_READ);
+
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, PBO);
+
+    // // float* data;
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+
+
+
+    if(ptr)
+    {
+        stbi_write_png("output.png", input.width, input.height, 4, ptr, 0);
+
+        glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    }
+
+    // // back to conventional pixel operation
+    // glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 
     debuglog.close();
     

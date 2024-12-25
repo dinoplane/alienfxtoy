@@ -14,8 +14,8 @@ void main() {
 	
     vec4 input0 = imageLoad(imgInput0, texelCoord);
 
-    value.x = float(texelCoord.x)/(gl_NumWorkGroups.x);
-    value.y = float(texelCoord.y)/(gl_NumWorkGroups.y);
-    value.z = input0.b;
+    value.r = float(texelCoord.x)/(gl_NumWorkGroups.x);
+    value.g = float(texelCoord.y)/(gl_NumWorkGroups.y);
+    value.b = input0.b;
     imageStore(imgOutput, texelCoord, value);
 }

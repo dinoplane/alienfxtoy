@@ -51,6 +51,8 @@ struct TextureBuffer {
 class FxGraph {
 
     public:
+    GLuint PBO; // preparing for gifs
+
     // std::vector<FxTask*> tasks;
     std::vector<FxNode*> nodes;
 

@@ -1,5 +1,5 @@
 #include <fx_task.hpp>
-
+#include <fmt/core.h>
 
 FxComputeTask::~FxComputeTask(){
     if (isShaderLoaded){
@@ -33,6 +33,7 @@ void FxComputeTask::ClearShader(){
 
 void FxComputeTask::RunTask(FxTaskInput input){
     if (isShaderLoaded){
+        fmt::print("Running Compute Task\n");
         glBindImageTexture(0, input.outputTexture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
         glBindTextureUnit(0, input.outputTexture);
 

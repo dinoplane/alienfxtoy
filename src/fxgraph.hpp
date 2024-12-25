@@ -34,7 +34,8 @@ struct FxNode {
 };
 
 struct TextureBuffer {
-    GLuint id;
+    GLuint inputID;
+    GLuint outputID;
     GLuint width;
     GLuint height;
     GLuint channels;
@@ -42,8 +43,8 @@ struct TextureBuffer {
     FxNode* srcNode;
     FxNode* currNode;
 
-    TextureBuffer(GLuint id, GLuint width, GLuint height, GLuint channels)
-        : id(id), width(width), height(height), channels(channels) {}
+    TextureBuffer(GLuint in, GLuint out, GLuint w, GLuint h, GLuint ch)
+        : inputID(in), outputID(out), width(w), height(h), channels(ch) {}
 
 };
 

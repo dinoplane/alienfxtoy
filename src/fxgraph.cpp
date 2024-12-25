@@ -68,21 +68,30 @@ void FxGraph::InitTextureBuffers(){
     for (auto& node : nodes){
         if (node->isInput){
             FxLoadTask *loadTask = static_cast<FxLoadTask*>(node->task);
-            GLuint textureid;
-            glCreateTextures(GL_TEXTURE_2D, 1, &textureid);
+            GLuint inID, outID;
+            glCreateTextures(GL_TEXTURE_2D, 1, &inID);
 
-            glTextureParameteri(textureid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-            glTextureParameteri(textureid, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-            glTextureParameteri(textureid, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTextureParameteri(textureid, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTextureParameteri(inID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTextureParameteri(inID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTextureParameteri(inID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTextureParameteri(inID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-            glTextureStorage2D(textureid, 1, GL_RGBA32F, loadTask->loadedTexture.width, loadTask->loadedTexture.height);
+            glTextureStorage2D(inID, 1, GL_RGBA32F, loadTask->loadedTexture.width, loadTask->loadedTexture.height);
 
+
+            glCreateTextures(GL_TEXTURE_2D, 1, &outID);
+
+            glTextureParameteri(outID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTextureParameteri(outID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTextureParameteri(outID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTextureParameteri(outID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+            glTextureStorage2D(outID, 1, GL_RGBA32F, loadTask->loadedTexture.width, loadTask->loadedTexture.height);
             
 
-            textureBuffers.emplace_back(loadTask->texture.id, loadTask->texture.width, loadTask->texture.height, loadTask->texture.channels);
-            &textureBuffers.back().srcNode = node;
-            &textureBuffers.back().currNode = node;
+            textureBuffers.emplace_back(inID, outID, loadTask->loadedTexture.width, loadTask->loadedTexture.height, loadTask->loadedTexture.channels);
+            textureBuffers.back().srcNode = node;
+            textureBuffers.back().currNode = node;
 
         }
     }
@@ -95,13 +104,31 @@ void FxGraph::InitTextureBuffers(){
 }
 
 void FxGraph::RunGraph(){
+    InitTextureBuffers();
+    // // BFS
+    // for (TextureBuffer& buffer : textureBuffers){
+    //     if (buffer.srcNode->outputs.size() == 0){
+    //         buffer.srcNode->task->RunTask({buffer.id, 0, buffer.width, buffer.height});
+    //     }
+    // }
+    FxNode *currNode = textureBuffers[0].currNode;
+    FxTaskInput input = {textureBuffers[0].inputID, textureBuffers[0].outputID, textureBuffers[0].width, textureBuffers[0].height};
+    fmt::print("Running Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
+    currNode->task->RunTask(input);
 
-    // BFS
-    for (TextureBuffer& buffer : textureBuffers){
-        if (buffer.srcNode->outputs.size() == 0){
-            buffer.srcNode->task->RunTask({buffer.id, 0, buffer.width, buffer.height});
-        }
-    }
+    // currNode = nodes[currNode->outputs[0]];
+    
+    // input = {textureBuffers[0].outputID, textureBuffers[0].inputID, textureBuffers[0].width, textureBuffers[0].height};
+    // currNode->task->RunTask(input);
+
+    
+
+
+    // while (currNode != nullptr){
+    //     FxTaskInput input = {textureBuffers[0].id, 0, textureBuffers[0].width, textureBuffers[0].height};
+
+    //     currNode = graph.nodes[currNode->outputs[0]];
+    // }
 
 
 

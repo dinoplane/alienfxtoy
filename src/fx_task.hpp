@@ -15,8 +15,8 @@ struct Texture {
 struct FxTaskInput {
     GLuint outputTexture;
     GLuint inputTexture;
-    int width;
-    int height;
+    GLuint width;
+    GLuint height;
 };
 
 class FxTask {

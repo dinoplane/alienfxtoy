@@ -46,7 +46,7 @@ int setupGLAD()
 
 static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
     ImGui::Begin(fmt::format("Node {}", idx).c_str());
-    FxNode& node = graph.nodes[idx];
+    FxNode& node = *graph.nodes[idx];
     //FxTask* node.task = node.task;
 
     const FxTask::FxTaskType selectedTaskType = (node.task == nullptr) ? FxTask::FxTaskType::Empty : node.task->type;
@@ -63,10 +63,10 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
                 ImGui::SetItemDefaultFocus();
         }
         if (item_selected_idx > -1){
-            if (graph.nodes[idx].task != nullptr){
-                delete graph.nodes[idx].task;
+            if (graph.nodes[idx]->task != nullptr){
+                delete graph.nodes[idx]->task;
             }
-            graph.nodes[idx].task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
+            graph.nodes[idx]->task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
         }
         // graph.SetNodeTask(idx, &graph.tasks[idx]);
         ImGui::EndCombo();
@@ -113,8 +113,8 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
     }
 
 
-    for (size_t i = 0; i < graph.nodes[idx].outputs.size(); i++){
-        ImGui::Text(fmt::format("To Node {}", graph.nodes[idx].outputs[i]).c_str());
+    for (size_t i = 0; i < graph.nodes[idx]->outputs.size(); i++){
+        ImGui::Text(fmt::format("To Node {}", graph.nodes[idx]->outputs[i]).c_str());
     }
     // ImGui::InputText("Add Output", buf, 32, ImGuiInputTextFlags_CharsDecimal);
 
@@ -136,6 +136,11 @@ static void RenderFxGraphWindow(FxGraph& graph){
    if (ImGui::Button("Add Node")){
        graph.AddNode();
    }
+
+   if (ImGui::Button("Run")) {
+       graph.RunGraph();
+   }
+
    ImGui::End();
 
 //    ImGui::End();

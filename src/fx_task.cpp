@@ -26,7 +26,7 @@ Texture FxTask::LoadImage(std::string texturePath){
     // load image
     int width, height, nrChannels;
     unsigned char *data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 4);
-
+    
     GLuint texture = 0;
 
     bool isValid = false;

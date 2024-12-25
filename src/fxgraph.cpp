@@ -1,5 +1,8 @@
 #include <fxgraph.hpp>
 #include <algorithm>
+#include <fmt/core.h>
+#include <fmt/ostream.h>
+
 
 Graph::Graph() { fmt::print("HIYA"); }
 
@@ -102,7 +105,7 @@ void FxGraph::InitTextureBuffers(){
     //     }
     // }
 }
-
+#include <fstream>
 void FxGraph::RunGraph(){
     InitTextureBuffers();
     // // BFS
@@ -111,16 +114,21 @@ void FxGraph::RunGraph(){
     //         buffer.srcNode->task->RunTask({buffer.id, 0, buffer.width, buffer.height});
     //     }
     // }
+    std::ofstream debuglog("fxdebug.log");
     FxNode *currNode = textureBuffers[0].currNode;
     FxTaskInput input = {textureBuffers[0].inputID, textureBuffers[0].outputID, textureBuffers[0].width, textureBuffers[0].height};
-    fmt::print("Running Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
+    fmt::print(debuglog, "Running Load Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
+
     currNode->task->RunTask(input);
 
-    // currNode = nodes[currNode->outputs[0]];
+    currNode = nodes[currNode->outputs[0]];
     
-    // input = {textureBuffers[0].outputID, textureBuffers[0].inputID, textureBuffers[0].width, textureBuffers[0].height};
-    // currNode->task->RunTask(input);
+    input = {textureBuffers[0].outputID, textureBuffers[0].inputID, textureBuffers[0].width, textureBuffers[0].height};
 
+    fmt::print(debuglog, "Running Compute Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
+    currNode->task->RunTask(input);
+
+    debuglog.close();
     
 
 

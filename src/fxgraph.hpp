@@ -30,7 +30,7 @@ struct FxNode {
     // std::vector<size_t> inputs; // a lack of foresight here, we could consider types of input/output
     std::vector<size_t> outputs; 
 
-    FxNode(FxTask* task) : task(task) { isInput = true; numInputs = 0; }
+    FxNode(FxTask* task = nullptr) : task(task) { isInput = true; numInputs = 0; }
 };
 
 struct TextureBuffer {
@@ -39,8 +39,8 @@ struct TextureBuffer {
     GLuint height;
     GLuint channels;
 
-    size_t srcNode;
-    size_t currNode;
+    FxNode* srcNode;
+    FxNode* currNode;
 
     TextureBuffer(GLuint id, GLuint width, GLuint height, GLuint channels)
         : id(id), width(width), height(height), channels(channels) {}
@@ -51,7 +51,7 @@ class FxGraph {
 
     public:
     // std::vector<FxTask*> tasks;
-    std::vector<FxNode> nodes;
+    std::vector<FxNode*> nodes;
 
 
     std::vector<TextureBuffer> textureBuffers;

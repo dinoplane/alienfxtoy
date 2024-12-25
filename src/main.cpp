@@ -8,16 +8,19 @@
 
 #include <stdio.h>
 #include <fmt/core.h>
+#include <fmt/ostream.h>
+
 #include <fxgraph.hpp>
 #include <fx_task.hpp>
 
+#include <fstream>
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 // #include <fx_task.hpp>
 
-
+#include <cassert>
 
 
 #undef main
@@ -44,14 +47,14 @@ int setupGLAD()
 static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
     ImGui::Begin(fmt::format("Node {}", idx).c_str());
     FxNode& node = graph.nodes[idx];
-    FxTask* nodeFxTask = graph.nodes[idx].task;
+    //FxTask* node.task = node.task;
 
-    const FxTask::FxTaskType selectedTaskType = (nodeFxTask == nullptr) ? FxTask::FxTaskType::Empty : nodeFxTask->type;
+    const FxTask::FxTaskType selectedTaskType = (node.task == nullptr) ? FxTask::FxTaskType::Empty : node.task->type;
     if (ImGui::BeginCombo("Task", FxTask::FxTaskNames[selectedTaskType])){
         int item_selected_idx = -1;
         for (int n = 0; n < FxTask::FxTaskType::MAX_TYPES + 1; ++n)
         {
-            const bool is_selected = (nodeFxTask == nullptr && n == 0) || (nodeFxTask != nullptr  && n == nodeFxTask->type);
+            const bool is_selected = (node.task == nullptr && n == 0) || (node.task != nullptr  && n == node.task->type);
             if (ImGui::Selectable(FxTask::FxTaskNames[n], is_selected))
                 item_selected_idx = n;
 
@@ -73,13 +76,37 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
         switch (node.task->type) {
 
             case FxTask::FxTaskType::Compute:
-                break;
+            {
+                FxComputeTask* computeFxTask = static_cast<FxComputeTask*>(node.task);
+                ImGui::Text(fmt::format("Loaded Shader: {}", computeFxTask->GetShaderPath()).c_str());
+                if (ImGui::Button("Load New Shader")) {
+                    // Open a dialog
+                    computeFxTask->SetShaderPath("./assets/shader/default.glsl");
+                    if (!computeFxTask->LoadShader()) {
+                        assert(false);
+                    }
+
+                }
+                if (ImGui::Button("Clear")) {
+                    computeFxTask->ClearShader();
+                }
+            } break;
 
             case FxTask::FxTaskType::Load:
             {
-                FxLoadTask* loadFxTask = static_cast<FxLoadTask*>(nodeFxTask);
+                FxLoadTask* loadFxTask = static_cast<FxLoadTask*>(node.task);
                 ImGui::Text(fmt::format("Loaded Image: {}", loadFxTask->GetTexturePath()).c_str());
+                if (ImGui::Button("Load New Image")) {
+                    // Open a dialog
+                    loadFxTask->SetTexturePath("./assets/texture/baka.jpg");
+                    if (!loadFxTask->LoadTexture()) {
+                        assert(false);
+                    }
 
+                }
+                if (ImGui::Button("Clear")) {
+                    loadFxTask->ClearTexture();
+                }
             } break;
         
         };
@@ -125,49 +152,49 @@ int main(int, char**)
         return -1;
     }
 
-
-
     // Decide GL+GLSL versions
 
     // GL 3.0 + GLSL 130
     const char* glsl_version = "#version 460";
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 6);
-
-    // From 2.0.18: Enable native IME.
-#ifdef SDL_HINT_IME_SHOW_UI
-    SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
-#endif
 
     // Create window with graphics context
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
+    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+    SDL_Window* window = SDL_CreateWindow("AlienFXToy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, window_flags);
     if (window == nullptr)
     {
-        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+        std::ofstream errlog("fxtoy.log");
+        fmt::print(errlog, "Error: SDL_CreateWindow(): {}\n", SDL_GetError());
+        errlog.close();
         return -1;
     }
 
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     if (gl_context == nullptr)
     {
-        printf("Error: SDL_GL_CreateContext(): %s\n", SDL_GetError());
+        std::ofstream errlog("fxtoy.log");
+
+        fmt::print(errlog, "Error: SDL_GL_CreateContext(): {}\n", SDL_GetError());
+
+        errlog.close();
         return -1;
     }
     
-    SDL_GL_MakeCurrent(window, gl_context);
-    SDL_GL_SetSwapInterval(1); // Enable vsync
-
-
     if (setupGLAD() < 0)
     {
         return -1;
     }
+
+    SDL_GL_MakeCurrent(window, gl_context);
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+
+
+
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

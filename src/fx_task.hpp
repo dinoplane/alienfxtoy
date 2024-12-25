@@ -12,7 +12,12 @@ struct Texture {
     bool isValid;
 };
 
-
+struct FxTaskInput {
+    GLuint outputTexture;
+    GLuint inputTexture;
+    int width;
+    int height;
+};
 
 class FxTask {
     public:
@@ -29,8 +34,10 @@ class FxTask {
     static FxTask* CreateTask(FxTaskType type);
 
     FxTaskType type;
-    FxTask(FxTaskType type) : type(type) {}
-    // virtual void RunTask();
+    bool isValidTask;
+    FxTask(FxTaskType type) : type(type), isValidTask(false) {}
+    
+    virtual void RunTask(FxTaskInput input) = 0;
 };
 
 class FxLoadTask : public FxTask {
@@ -47,60 +54,24 @@ class FxLoadTask : public FxTask {
     void SetTexturePath(std::string newPath ) { texturePath = newPath; }
     bool LoadTexture();
     void ClearTexture();
+    virtual void RunTask(FxTaskInput input);
 };
-
-    /*
-    public:
-    std::string name;
-    bool isInputTask;
-    ComputeShader* shader;
-    std::vector<Texture> inputs; // these are for textures loaded for input
-    std::vector<Texture> textures; // these are for textures used by the compute shader
-    // There is room for other inputs other than textures
-    // Multiple textures can be used as inputs
-    // Maybe inputs can be combined into... a flat piece of data with metadata indicating where each thing goes
-    public:
-    FxTask(std::string name, std::string computeShaderPath, bool isInputTask=false);
-    FxTask(std::string name, std::string computeShaderPath, std::vector<std::string> texturePaths);
-    
-    FxTask(const FxTask& other) = delete;
-    FxTask& operator=(const FxTask& other) = delete;
-
-    FxTask(FxTask&& other) noexcept
-        : name(other.name), shader(other.shader), inputs(other.inputs), textures(other.textures)
-    {
-        other.shader = nullptr;
-        other.inputs.clear();
-        other.textures.clear();
-    }
-
-    FxTask& operator=(FxTask&& other) noexcept
-    {
-        if (this != &other)
-        {
-            name = other.name;
-            shader = other.shader;
-            inputs = other.inputs;
-            textures = other.textures;
-            other.shader = nullptr;
-            other.inputs.clear();
-            other.textures.clear();
-        }
-        return *this;
-    }
-
-
-    ~FxTask();
-    virtual void run(GLuint inTexture, GLuint outTexture);
-    static Texture loadImage(std::string texturePath); // this function could be used internally (for compute shader inputs) or externally (for loading input textures)
-};
-
-
 
 class FxComputeTask : public FxTask {
+    
     public:
-    FxComputeTask(std::string name, std::string computeShaderPath);
-    FxComputeTask(std::string name, std::string computeShaderPath, std::vector<std::string> texturePaths);
+    ComputeShader* loadedShader;
+    bool isShaderLoaded;
+    std::string shaderPath;
+    
+    FxComputeTask() : FxTask(FxTaskType::Compute), shaderPath(""), isShaderLoaded(false), loadedShader(nullptr) {}
+    ~FxComputeTask();
+    
+    std::string GetShaderPath() { return shaderPath; }
+    void SetShaderPath(std::string newPath ) { shaderPath = newPath; }
+    bool LoadShader();
+    void ClearShader();
+    virtual void RunTask(FxTaskInput input);
 };
-*/
+
 #endif

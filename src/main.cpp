@@ -81,7 +81,7 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
                 ImGui::Text(fmt::format("Loaded Shader: {}", computeFxTask->GetShaderPath()).c_str());
                 if (ImGui::Button("Load New Shader")) {
                     // Open a dialog
-                    computeFxTask->SetShaderPath("./assets/shader/default.glsl");
+                    computeFxTask->SetShaderPath("./assets/shader/kuwahara.glsl");
                     if (!computeFxTask->LoadShader()) {
                         assert(false);
                     }
@@ -98,7 +98,7 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
                 ImGui::Text(fmt::format("Loaded Image: {}", loadFxTask->GetTexturePath()).c_str());
                 if (ImGui::Button("Load New Image")) {
                     // Open a dialog
-                    loadFxTask->SetTexturePath("./assets/texture/baka.jpg");
+                    loadFxTask->SetTexturePath("./assets/texture/luigi.png");
                     if (!loadFxTask->LoadTexture()) {
                         assert(false);
                     }

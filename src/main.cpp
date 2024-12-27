@@ -6,7 +6,10 @@
 #include <SDL.h>
 
 
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio> // wait how is this working?
+#include <cassert>
+
 #include <fmt/core.h>
 #include <fmt/ostream.h>
 
@@ -20,8 +23,7 @@
 #include "imgui_impl_opengl3.h"
 // #include <fx_task.hpp>
 
-#include <cassert>
-
+#include <nfd.h>
 
 #undef main
 
@@ -97,11 +99,26 @@ static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
                 FxLoadTask* loadFxTask = static_cast<FxLoadTask*>(node.task);
                 ImGui::Text(fmt::format("Loaded Image: {}", loadFxTask->GetTexturePath()).c_str());
                 if (ImGui::Button("Load New Image")) {
-                    // Open a dialog
-                    loadFxTask->SetTexturePath("./assets/texture/luigi.png");
-                    if (!loadFxTask->LoadTexture()) {
-                        assert(false);
+
+                    nfdchar_t *outPath = NULL;
+                    nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
+                        
+                    if ( result == NFD_OKAY ) {
+                        puts("Success!");
+                        puts(outPath);
+                        free(outPath);
                     }
+                    else if ( result == NFD_CANCEL ) {
+                        puts("User pressed cancel.");
+                    }
+                    else {
+                        printf("Error: %s\n", NFD_GetError() );
+                    }
+                    // Open a dialog
+                    // loadFxTask->SetTexturePath("./assets/texture/luigi.png");
+                    // if (!loadFxTask->LoadTexture()) {
+                    //     assert(false);
+                    // }
 
                 }
                 if (ImGui::Button("Clear")) {

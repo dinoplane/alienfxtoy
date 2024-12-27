@@ -1,3 +1,18 @@
-1 Add move and copy constructors to the classes
-2 Create agood ui representation (graphs and popups)
-3 put mr luigi mangione into the blender
+DONE finished first prototype
+    - Can load shaders and textures into the app
+    - can apply shader effects onto the textures in a pipeline
+    - node based representation
+    - used a PBO to async the textre processing (future proofing for gifs)
+
+TODO second prototype
+    - improve UI 
+        DO actual loading of images
+        - way to add connections humanly
+    DO generalize graph
+        - allow arbitrary number of nodes
+    - test input
+        - sobel operator and grayscale (sketch)
+
+TODO third prototype
+    - figure out how to automate uniforms
+        - can i use reflection?

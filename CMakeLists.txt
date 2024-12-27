@@ -73,6 +73,9 @@ target_sources(imgui PRIVATE
 add_library (stb INTERFACE)
 target_include_directories(stb INTERFACE ${VENDOR_DIR}/stb)
 
+# nfd https://github.com/aarcangeli/nativefiledialog-cmake
+add_subdirectory(${VENDOR_DIR}/nfd EXCLUDE_FROM_ALL)
+
 # Organize files
 include_directories(
    ${VENDOR_DIR}/glm/
@@ -80,6 +83,7 @@ include_directories(
    ${VENDOR_DIR}/glfw/include/
    ${VENDOR_DIR}/SDL/include/
    ${VENDOR_DIR}/stb/
+   ${VENDOR_DIR}/nfd/src/include/
    ${SRC_DIR}/
 )
 
@@ -127,6 +131,7 @@ target_link_libraries(${PROJECT_NAME}
     imgui
     fmt::fmt
     SDL2::SDL2
+    nativefiledialog
     ${CMAKE_DL_LIBS} # Needed for glad - https://stackoverflow.com/a/56842079/2394163
 )
 

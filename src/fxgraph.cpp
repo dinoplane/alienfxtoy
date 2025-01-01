@@ -34,9 +34,8 @@ FxGraph::FxGraph(){
 
 FxGraph::~FxGraph(){
     for (auto& node : nodes){
-        if (node->task != nullptr)
-            delete node->task;
-        delete node;
+        if (node.task != nullptr)
+            delete node.task;
     }
 
     nodes.clear();
@@ -51,13 +50,13 @@ void FxGraph::AddNode(){
 }
 
 void FxGraph::SetNodeTask(size_t nodeIndex, FxTask* task){
-    nodes[nodeIndex]->task = task;
+    nodes[nodeIndex].task = task;
 }
 
 void FxGraph::addConnection(size_t srcNode, size_t dstNode){
-    nodes[srcNode]->outputs.push_back(dstNode);
-    nodes[dstNode]->isInput = false;
-    ++nodes[dstNode]->numInputs;
+    nodes[srcNode].outputs.push_back(dstNode);
+    nodes[dstNode].isInput = false;
+    ++nodes[dstNode].numInputs;
 }
 
 void FxGraph::RemoveConnection(size_t srcNode, size_t dstNode){
@@ -113,6 +112,8 @@ void FxGraph::InitTextureBuffers(){
     //     }
     // }
 }
+
+
 #include <fstream>
 void FxGraph::RunGraph(){
     InitTextureBuffers();

@@ -187,7 +187,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        RenderFxGraphWindow(graph, graphUIState);
+        RenderFxGraphWindow(&graph, &graphUIState);
 
         // Rendering
         ImGui::Render();

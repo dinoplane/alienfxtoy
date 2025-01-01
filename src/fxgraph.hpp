@@ -54,7 +54,7 @@ class FxGraph {
     GLuint PBO; // preparing for gifs
 
     // std::vector<FxTask*> tasks;
-    std::vector<FxNode*> nodes;
+    std::vector<FxNode> nodes;
 
 
     std::vector<TextureBuffer> textureBuffers;
@@ -69,5 +69,35 @@ class FxGraph {
     void RunGraph();
 
 };
+
+
+/*
+Should Graph have std::vector<FxNode> or std::vector<FxNode*>?
+
+User clicks add node: O(1)
+User clicks remove node: O(n)
+Traversal: O(n)
+
+Adjacency list is good.
+But...
+
+
+                            |    std::vector<size_t> outputs    |    std::vector<FxNode*> outputs;
+----------------------------|-----------------------------------|-------------------------------
+std::vector<FxNode>  nodes  |    nodes stack allocated          |    nodes stack allocated
+                            |    Addnode gg                     |    Addnode gg
+                            |    O(1) add                       |    O(1) add
+                            |    O(n) remove                    |    O(n) remove
+                            |    O(n) traversal                 |    O(n) traversal
+----------------------------|-----------------------------------|-------------------------------
+std::vector<FxNode*> nodes  |    nodes heap allocated           |    nodes heap allocated                                      
+                            |    contiguous                     |    contiguous
+                            |    O(1) add                       |    O(1) add
+                            |    O(n) remove                    |    O(n) remove
+                            |    O(n) traversal                 |    O(n) traversal
+
+
+*/
+
 
 #endif 

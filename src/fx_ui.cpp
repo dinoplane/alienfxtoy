@@ -1,12 +1,12 @@
 #include <fx_ui.hpp>
 
-static void RenderTaskSelector(){
-    const FxTask::FxTaskType selectedTaskType = (node.task == nullptr) ? FxTask::FxTaskType::Empty : node.task->type;
+static void RenderTaskSelector(FxNode* node, FxGraph* graph, size_t idx){
+    const FxTask::FxTaskType selectedTaskType = (node->task == nullptr) ? FxTask::FxTaskType::Empty : node->task->type;
     if (ImGui::BeginCombo("Task", FxTask::FxTaskNames[selectedTaskType])){
         int item_selected_idx = -1;
         for (int n = 0; n < FxTask::FxTaskType::MAX_TYPES + 1; ++n)
         {
-            const bool is_selected = (node.task == nullptr && n == 0) || (node.task != nullptr  && n == node.task->type);
+            const bool is_selected = (node->task == nullptr && n == 0) || (node->task != nullptr  && n == node->task->type);
             if (ImGui::Selectable(FxTask::FxTaskNames[n], is_selected))
                 item_selected_idx = n;
 
@@ -20,13 +20,13 @@ static void RenderTaskSelector(){
             }
             graph->nodes[idx]->task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
         }
-        // graph->SetNodeTask(idx, &graph->tasks[idx]);
+        // graph->SetNodeTask(idx, &graph->tasks[idx]); 
         ImGui::EndCombo();
     }
 }
 
-static void RenderComputeTask(FxComputeTask* computeFxTask){
-    FxComputeTask* computeFxTask = static_cast<FxComputeTask*>(node.task);
+static void RenderComputeTask(FxComputeTask* computeFxTask, FxNodeUIState* nodeUIState){
+    // FxComputeTask* computeFxTask = static_cast<FxComputeTask*>(node.task);
     ImGui::Text(nodeUIState->status.c_str());
     if (ImGui::Button("Load New Shader")) {
         // Open a dialog
@@ -41,7 +41,7 @@ static void RenderComputeTask(FxComputeTask* computeFxTask){
     }
 }
 
-static void RenderLoadTask(FxLoadTask* loadFxTask){
+static void RenderLoadTask(FxLoadTask* loadFxTask, FxNodeUIState* nodeUIState){
     ImGui::Text(nodeUIState->status.c_str());
     if (ImGui::Button("Load New Image")) {
 
@@ -71,25 +71,25 @@ static void RenderLoadTask(FxLoadTask* loadFxTask){
     }
 }
 
- void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx){
+void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx){
     ImGui::Begin(fmt::format("Node {}", idx).c_str());
-    FxNode& node = *graph->nodes[idx];
+    FxNode* node = &graph->nodes[idx];
     FxNodeUIState* nodeUIState = &graphUIState->nodeUIState[idx];
     //FxTask* node.task = node.task;
 
+    RenderTaskSelector(node, graph, idx);
 
-
-    if (node.task != nullptr){
-        switch (node.task->type) {
+    if (node->task != nullptr){
+        switch (node->task->type) {
 
             case FxTask::FxTaskType::Compute:
             {
-                RenderComputeTask(static_cast<FxComputeTask*>(node.task));
+                RenderComputeTask(static_cast<FxComputeTask*>(node->task), nodeUIState);
             } break;
 
             case FxTask::FxTaskType::Load:
             {
-                RenderLoadTask(static_cast<FxLoadTask*>(node.task));
+                RenderLoadTask(static_cast<FxLoadTask*>(node->task), nodeUIState);
             } break;
         
         };
@@ -112,7 +112,7 @@ static void RenderLoadTask(FxLoadTask* loadFxTask){
 void RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState){
 //    ImGui::Begin("FxGraph");
    for (size_t i = 0; i < graph->nodes.size(); i++){
-       RenderFxNodeWindow(graph-> graphUIState-> i);
+       RenderFxNodeWindow(graph, graphUIState, i);
    }
    ImGui::Begin("Graph");
    if (ImGui::Button("Add Node")){

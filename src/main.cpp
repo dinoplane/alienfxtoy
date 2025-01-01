@@ -19,18 +19,18 @@
 #include <fstream>
 
 #include "imgui.h"
+
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
+
+
+#include <fx_ui.hpp>
+
+
 // #include <fx_task.hpp>
 
-#include <nfd.h>
 
 #undef main
-
-
-struct GraphUIState {
-
-};
 
 int setupGLAD()
 {
@@ -46,122 +46,6 @@ int setupGLAD()
 }
 
 
-static void RenderFxNodeWindow(FxGraph& graph, size_t idx){
-    ImGui::Begin(fmt::format("Node {}", idx).c_str());
-    FxNode& node = *graph.nodes[idx];
-    //FxTask* node.task = node.task;
-
-    const FxTask::FxTaskType selectedTaskType = (node.task == nullptr) ? FxTask::FxTaskType::Empty : node.task->type;
-    if (ImGui::BeginCombo("Task", FxTask::FxTaskNames[selectedTaskType])){
-        int item_selected_idx = -1;
-        for (int n = 0; n < FxTask::FxTaskType::MAX_TYPES + 1; ++n)
-        {
-            const bool is_selected = (node.task == nullptr && n == 0) || (node.task != nullptr  && n == node.task->type);
-            if (ImGui::Selectable(FxTask::FxTaskNames[n], is_selected))
-                item_selected_idx = n;
-
-            // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-            if (is_selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        if (item_selected_idx > -1){
-            if (graph.nodes[idx]->task != nullptr){
-                delete graph.nodes[idx]->task;
-            }
-            graph.nodes[idx]->task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
-        }
-        // graph.SetNodeTask(idx, &graph.tasks[idx]);
-        ImGui::EndCombo();
-    }
-
-    if (node.task != nullptr){
-        switch (node.task->type) {
-
-            case FxTask::FxTaskType::Compute:
-            {
-                FxComputeTask* computeFxTask = static_cast<FxComputeTask*>(node.task);
-                ImGui::Text(fmt::format("Loaded Shader: {}", computeFxTask->GetShaderPath()).c_str());
-                if (ImGui::Button("Load New Shader")) {
-                    // Open a dialog
-                    computeFxTask->SetShaderPath("./assets/shader/kuwahara.glsl");
-                    if (!computeFxTask->LoadShader()) {
-                        assert(false);
-                    }
-
-                }
-                if (ImGui::Button("Clear")) {
-                    computeFxTask->ClearShader();
-                }
-            } break;
-
-            case FxTask::FxTaskType::Load:
-            {
-                FxLoadTask* loadFxTask = static_cast<FxLoadTask*>(node.task);
-                ImGui::Text(fmt::format("Loaded Image: {}", loadFxTask->GetTexturePath()).c_str());
-                if (ImGui::Button("Load New Image")) {
-
-                    nfdchar_t *outPath = NULL;
-                    nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
-                        
-                    if ( result == NFD_OKAY ) {
-                        puts("Success!");
-                        puts(outPath);
-                        free(outPath);
-                    }
-                    else if ( result == NFD_CANCEL ) {
-                        puts("User pressed cancel.");
-                    }
-                    else {
-                        printf("Error: %s\n", NFD_GetError() );
-                    }
-                    // Open a dialog
-                    // loadFxTask->SetTexturePath("./assets/texture/luigi.png");
-                    // if (!loadFxTask->LoadTexture()) {
-                    //     assert(false);
-                    // }
-
-                }
-                if (ImGui::Button("Clear")) {
-                    loadFxTask->ClearTexture();
-                }
-            } break;
-        
-        };
-    }
-
-
-    for (size_t i = 0; i < graph.nodes[idx]->outputs.size(); i++){
-        ImGui::Text(fmt::format("To Node {}", graph.nodes[idx]->outputs[i]).c_str());
-    }
-    // ImGui::InputText("Add Output", buf, 32, ImGuiInputTextFlags_CharsDecimal);
-
-    if (ImGui::Button("+")){
-        // size_t output = std::stoul(buf);
-        graph.addConnection(idx, 1);
-    }
-    ImGui::End();
-
-}
-
-
-static void RenderFxGraphWindow(FxGraph& graph){
-//    ImGui::Begin("FxGraph");
-   for (size_t i = 0; i < graph.nodes.size(); i++){
-       RenderFxNodeWindow(graph, i);
-   }
-   ImGui::Begin("Graph");
-   if (ImGui::Button("Add Node")){
-       graph.AddNode();
-   }
-
-   if (ImGui::Button("Run")) {
-       graph.RunGraph();
-   }
-
-   ImGui::End();
-
-//    ImGui::End();
-}
 
 // Main code
 int main(int, char**)
@@ -258,6 +142,7 @@ int main(int, char**)
     //FxTask graph;
 
     FxGraph graph;
+    FxGraphUIState graphUIState;
 
     // Main loop
     bool done = false;
@@ -302,7 +187,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        RenderFxGraphWindow(graph);
+        RenderFxGraphWindow(graph, graphUIState);
 
         // Rendering
         ImGui::Render();

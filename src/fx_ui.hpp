@@ -26,9 +26,20 @@ struct FxGraphUIState {
     std::vector<FxNodeUIState> nodeUIState;
 };
 
+namespace FxUi {
 
-void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx);
-void RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState);
 
+
+    static const char* InitTaskStatus[]{
+        "Loaded: None",
+        "Loaded Image: None",
+        "Loaded Shader: None"
+    };
+    void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx);
+    void RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState);
+
+
+
+};
 
 #endif // FX_UI_HPP

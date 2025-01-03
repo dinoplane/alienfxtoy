@@ -22,13 +22,16 @@ bool FxComputeTask::LoadShader(){
 }
 
 void FxComputeTask::ClearShader(){
-    isShaderLoaded = false;
-    isValidTask = false;
-    shaderPath = "";
+    if (isShaderLoaded){
+        isShaderLoaded = false;
+        isValidTask = false;
+        shaderPath = "";
 
-    loadedShader->deleteProgram();
-    delete loadedShader;
-    loadedShader = nullptr;
+        loadedShader->deleteProgram();
+        delete loadedShader;
+        loadedShader = nullptr;
+    }
+
 }
 
 void FxComputeTask::RunTask(FxTaskInput input){

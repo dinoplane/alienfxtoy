@@ -18,17 +18,18 @@ bool FxLoadTask::LoadTexture(){
 }
 
 void FxLoadTask::ClearTexture(){
-    isTextureLoaded = false;
-    texturePath = "";
+    if (isTextureLoaded){
+        isTextureLoaded = false;
+        texturePath = "";
 
-    glDeleteTextures(1, &loadedTexture.id);
-    loadedTexture.id = 0;
-    loadedTexture.width = 0;
-    loadedTexture.height = 0;
-    loadedTexture.channels = 0;
-    loadedTexture.isValid = false;
-    isValidTask = false;
-
+        glDeleteTextures(1, &loadedTexture.id);
+        loadedTexture.id = 0;
+        loadedTexture.width = 0;
+        loadedTexture.height = 0;
+        loadedTexture.channels = 0;
+        loadedTexture.isValid = false;
+        isValidTask = false;
+    }
 }
 
 FxLoadTask::~FxLoadTask(){

@@ -1,6 +1,6 @@
 #include <fx_ui.hpp>
 
-static void RenderTaskSelector(FxNode* node, FxGraph* graph, size_t idx){
+static void RenderTaskSelector(FxNode* node, FxNodeUIState* nodeUIState){
     const FxTask::FxTaskType selectedTaskType = (node->task == nullptr) ? FxTask::FxTaskType::Empty : node->task->type;
     if (ImGui::BeginCombo("Task", FxTask::FxTaskNames[selectedTaskType])){
         int item_selected_idx = -1;
@@ -15,10 +15,11 @@ static void RenderTaskSelector(FxNode* node, FxGraph* graph, size_t idx){
                 ImGui::SetItemDefaultFocus();
         }
         if (item_selected_idx > -1){
-            if (graph->nodes[idx]->task != nullptr){
-                delete graph->nodes[idx]->task;
+            if ((*node).task != nullptr){
+                delete (*node).task;
             }
-            graph->nodes[idx]->task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
+            (*node).task = FxTask::CreateTask((FxTask::FxTaskType) item_selected_idx);
+            (*nodeUIState).status = FxUi::InitTaskStatus[item_selected_idx];
         }
         // graph->SetNodeTask(idx, &graph->tasks[idx]); 
         ImGui::EndCombo();
@@ -30,6 +31,26 @@ static void RenderComputeTask(FxComputeTask* computeFxTask, FxNodeUIState* nodeU
     ImGui::Text(nodeUIState->status.c_str());
     if (ImGui::Button("Load New Shader")) {
         // Open a dialog
+        nfdchar_t *outPath = NULL;
+        nfdresult_t result = NFD_OpenDialog( "glsl,comp,frag,vert", NULL, &outPath );
+            
+        if ( result == NFD_OKAY ) {
+            
+            computeFxTask->SetShaderPath(outPath);
+            if (!computeFxTask->LoadShader()) {
+                (*nodeUIState).status = fmt::format("Invalid Shader: {}\n", outPath);
+            } else {
+                (*nodeUIState).status = fmt::format("Loaded Shader: {}\n", outPath);
+            }
+            free(outPath);
+        }
+        else if ( result == NFD_CANCEL ) {
+            (*nodeUIState).status = "Loaded Shader: Cancelled\n";
+        }
+        else {
+            (*nodeUIState).status = fmt::format("Error: %s\n", NFD_GetError() );
+        }
+        
         computeFxTask->SetShaderPath("./assets/shader/kuwahara.glsl");
         if (!computeFxTask->LoadShader()) {
             assert(false);
@@ -38,6 +59,7 @@ static void RenderComputeTask(FxComputeTask* computeFxTask, FxNodeUIState* nodeU
     }
     if (ImGui::Button("Clear")) {
         computeFxTask->ClearShader();
+        (*nodeUIState).status = "Loaded Shader: None\n";
     }
 }
 
@@ -46,10 +68,16 @@ static void RenderLoadTask(FxLoadTask* loadFxTask, FxNodeUIState* nodeUIState){
     if (ImGui::Button("Load New Image")) {
 
         nfdchar_t *outPath = NULL;
-        nfdresult_t result = NFD_OpenDialog( NULL, NULL, &outPath );
+        nfdresult_t result = NFD_OpenDialog( "png,jpg,bmp,jpeg", NULL, &outPath );
             
         if ( result == NFD_OKAY ) {
-            (*nodeUIState).status = fmt::format("Loaded Image: {}\n", outPath);
+            
+            loadFxTask->SetTexturePath(outPath);
+            if (!loadFxTask->LoadTexture()) {
+                (*nodeUIState).status = fmt::format("Invalid Texture: {}\n", outPath);
+            } else {
+                (*nodeUIState).status = fmt::format("Loaded Image: {}\n", outPath);
+            }
             free(outPath);
         }
         else if ( result == NFD_CANCEL ) {
@@ -58,26 +86,20 @@ static void RenderLoadTask(FxLoadTask* loadFxTask, FxNodeUIState* nodeUIState){
         else {
             (*nodeUIState).status = fmt::format("Error: %s\n", NFD_GetError() );
         }
-        // Open a dialog
-        // loadFxTask->SetTexturePath("./assets/texture/luigi.png");
-        // if (!loadFxTask->LoadTexture()) {
-        //     assert(false);
-        // }
-
     }
     if (ImGui::Button("Clear")) {
         loadFxTask->ClearTexture();
-        (*nodeUIState).status = "Loaded Image: Cancelled\n";
+        (*nodeUIState).status = "Loaded Image: None\n";
     }
 }
 
-void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx){
+void FxUi::RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx){
     ImGui::Begin(fmt::format("Node {}", idx).c_str());
     FxNode* node = &graph->nodes[idx];
     FxNodeUIState* nodeUIState = &graphUIState->nodeUIState[idx];
     //FxTask* node.task = node.task;
 
-    RenderTaskSelector(node, graph, idx);
+    RenderTaskSelector(node, nodeUIState);
 
     if (node->task != nullptr){
         switch (node->task->type) {
@@ -96,8 +118,8 @@ void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx
     }
 
 
-    for (size_t i = 0; i < graph->nodes[idx]->outputs.size(); i++){
-        ImGui::Text(fmt::format("To Node {}", graph->nodes[idx]->outputs[i]).c_str());
+    for (size_t i = 0; i < graph->nodes[idx].outputs.size(); i++){
+        ImGui::Text(fmt::format("To Node {}", graph->nodes[idx].outputs[i]).c_str());
     }
     // ImGui::InputText("Add Output", buf, 32, ImGuiInputTextFlags_CharsDecimal);
 
@@ -109,7 +131,7 @@ void RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx
 
 }
 
-void RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState){
+void FxUi::RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState){
 //    ImGui::Begin("FxGraph");
    for (size_t i = 0; i < graph->nodes.size(); i++){
        RenderFxNodeWindow(graph, graphUIState, i);

@@ -45,39 +45,58 @@ FxGraph::~FxGraph(){
     glDeleteBuffers(1, &PBO);
 }
 
+static inline bool ValidateNodeIdx(FxGraph* graph, size_t idx){
+    return 0 <= idx && idx < graph->nodes.size();
+}
+
 void FxGraph::AddNode(){
-    nodes.emplace_back(new FxNode());
+    nodes.emplace_back(FxNode());
 }
 
 void FxGraph::SetNodeTask(size_t nodeIndex, FxTask* task){
+    if (!ValidateNodeIdx(this, nodeIndex)){
+        fmt::print("Invalid node index: {}\n", nodeIndex);
+        return;
+    }
     nodes[nodeIndex].task = task;
 }
 
 void FxGraph::addConnection(size_t srcNode, size_t dstNode){
+    if (!ValidateNodeIdx(this, srcNode) || !ValidateNodeIdx(this, dstNode)){
+        fmt::print("Invalid node index: {} {}\n", srcNode, dstNode);
+        return;
+    }
+
     nodes[srcNode].outputs.push_back(dstNode);
     nodes[dstNode].isInput = false;
     ++nodes[dstNode].numInputs;
 }
 
 void FxGraph::RemoveConnection(size_t srcNode, size_t dstNode){
-    nodes[srcNode]->outputs.erase(
+    if (!ValidateNodeIdx(this, srcNode) || !ValidateNodeIdx(this, dstNode)){
+        fmt::print("Invalid node index: {} {}\n", srcNode, dstNode);
+        return;
+    }
+
+    nodes[srcNode].outputs.erase(
         std::remove(
-            nodes[srcNode]->outputs.begin(),
-            nodes[srcNode]->outputs.end(),
+            nodes[srcNode].outputs.begin(),
+            nodes[srcNode].outputs.end(),
             dstNode
         ),
-        nodes[srcNode]->outputs.end()
+        nodes[srcNode].outputs.end()
     );
-    --nodes[dstNode]->numInputs;
-    if (nodes[dstNode]->numInputs == 0){
-        nodes[dstNode]->isInput = true;
+    --nodes[dstNode].numInputs;
+    if (nodes[dstNode].numInputs == 0){
+        nodes[dstNode].isInput = true;
     }
 }
 
 void FxGraph::InitTextureBuffers(){
-    for (auto& node : nodes){
-        if (node->isInput){
-            FxLoadTask *loadTask = static_cast<FxLoadTask*>(node->task);
+    for (size_t nodeIdx = 0; nodeIdx < nodes.size(); nodeIdx++){
+        FxNode& node = nodes[nodeIdx];
+        if (node.isInput){
+            FxLoadTask *loadTask = static_cast<FxLoadTask*>(node.task);
             GLuint inID, outID;
             glCreateTextures(GL_TEXTURE_2D, 1, &inID);
 
@@ -100,8 +119,8 @@ void FxGraph::InitTextureBuffers(){
             
 
             textureBuffers.emplace_back(inID, outID, loadTask->loadedTexture.width, loadTask->loadedTexture.height, loadTask->loadedTexture.channels);
-            textureBuffers.back().srcNode = node;
-            textureBuffers.back().currNode = node;
+            textureBuffers.back().srcNodeIdx = nodeIdx;
+            textureBuffers.back().currNodeIdx = nodeIdx;
 
         }
     }
@@ -124,18 +143,18 @@ void FxGraph::RunGraph(){
     //     }
     // }
     std::ofstream debuglog("fxdebug.log");
-    FxNode *currNode = textureBuffers[0].currNode;
+    FxNode& currNode = nodes[textureBuffers[0].currNodeIdx];
     FxTaskInput input = {textureBuffers[0].inputID, textureBuffers[0].outputID, textureBuffers[0].width, textureBuffers[0].height};
     fmt::print(debuglog, "Running Load Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
 
-    currNode->task->RunTask(input);
+    currNode.task->RunTask(input);
 
-    currNode = nodes[currNode->outputs[0]];
+    currNode = nodes[currNode.outputs[0]];
     
     input = {textureBuffers[0].outputID, textureBuffers[0].inputID, textureBuffers[0].width, textureBuffers[0].height};
 
     fmt::print(debuglog, "Running Compute Task\n In {} Out{}\n w {} h{}\n", input.inputTexture, input.outputTexture, input.width, input.height);
-    currNode->task->RunTask(input);
+    currNode.task->RunTask(input);
 
     GLuint imageSize = input.width * input.height * 4;
     GLubyte* data = new GLubyte[imageSize];
@@ -163,7 +182,7 @@ void FxGraph::RunGraph(){
 
     debuglog.close();
     
-
+    // Delete TextureBuffers
 
     // while (currNode != nullptr){
     //     FxTaskInput input = {textureBuffers[0].id, 0, textureBuffers[0].width, textureBuffers[0].height};

@@ -50,12 +50,6 @@ static void RenderComputeTask(FxComputeTask* computeFxTask, FxNodeUIState* nodeU
         else {
             (*nodeUIState).status = fmt::format("Error: %s\n", NFD_GetError() );
         }
-        
-        computeFxTask->SetShaderPath("./assets/shader/kuwahara.glsl");
-        if (!computeFxTask->LoadShader()) {
-            assert(false);
-        }
-
     }
     if (ImGui::Button("Clear")) {
         computeFxTask->ClearShader();

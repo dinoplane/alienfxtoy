@@ -48,3 +48,10 @@ void FxLoadTask::RunTask(FxTaskInput input){
             loadedTexture.width, loadedTexture.height, 1);
     }
 }
+
+void FxLoadTask::PrintTask(){
+    fmt::print("Load Task\n");
+    fmt::print("Texture Path: {}\n", texturePath);
+    fmt::print("Texture Loaded: {}\n", isTextureLoaded);
+    fmt::print("Task Valid: {}\n", isValidTask);
+}

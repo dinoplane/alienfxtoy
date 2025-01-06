@@ -1,4 +1,5 @@
 #include <fx_ui.hpp>
+#include <imnodes.h>
 
 static void RenderTaskSelector(FxNode* node, FxNodeUIState* nodeUIState){
     const FxTask::FxTaskType selectedTaskType = (node->task == nullptr) ? FxTask::FxTaskType::Empty : node->task->type;
@@ -50,12 +51,6 @@ static void RenderComputeTask(FxComputeTask* computeFxTask, FxNodeUIState* nodeU
         else {
             (*nodeUIState).status = fmt::format("Error: %s\n", NFD_GetError() );
         }
-        
-        computeFxTask->SetShaderPath("./assets/shader/kuwahara.glsl");
-        if (!computeFxTask->LoadShader()) {
-            assert(false);
-        }
-
     }
     if (ImGui::Button("Clear")) {
         computeFxTask->ClearShader();
@@ -94,7 +89,7 @@ static void RenderLoadTask(FxLoadTask* loadFxTask, FxNodeUIState* nodeUIState){
 }
 
 void FxUi::RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size_t idx){
-    ImGui::Begin(fmt::format("Node {}", idx).c_str());
+    ImGui::BeginChild(fmt::format("Node {}", idx).c_str());
     FxNode* node = &graph->nodes[idx];
     FxNodeUIState* nodeUIState = &graphUIState->nodeUIState[idx];
     //FxTask* node.task = node.task;
@@ -123,29 +118,48 @@ void FxUi::RenderFxNodeWindow(FxGraph* graph, FxGraphUIState* graphUIState, size
     }
     // ImGui::InputText("Add Output", buf, 32, ImGuiInputTextFlags_CharsDecimal);
 
+
+
+
     if (ImGui::Button("+")){
         // size_t output = std::stoul(buf);
         graph->addConnection(idx, 1);
     }
-    ImGui::End();
+    ImGui::EndChild();
 
 }
 
 void FxUi::RenderFxGraphWindow(FxGraph* graph, FxGraphUIState* graphUIState){
 //    ImGui::Begin("FxGraph");
-   for (size_t i = 0; i < graph->nodes.size(); i++){
-       RenderFxNodeWindow(graph, graphUIState, i);
-   }
+
    ImGui::Begin("Graph");
+
+
+
+
    if (ImGui::Button("Add Node")){
        graph->AddNode();
        graphUIState->nodeUIState.push_back(FxNodeUIState());
        graphUIState->nodeUIState.back().status = "Loaded: ";
    }
 
+
+
+
    if (ImGui::Button("Run")) {
        graph->RunGraph();
    }
+
+    const int hardcoded_node_id = 1;
+
+    ImNodes::BeginNodeEditor();
+
+    ImNodes::BeginNode(hardcoded_node_id);
+    ImGui::Dummy(ImVec2(80.0f, 45.0f));
+    ImNodes::EndNode();
+
+    ImNodes::EndNodeEditor();
+
 
    ImGui::End();
 

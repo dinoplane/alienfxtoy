@@ -58,6 +58,9 @@ target_include_directories(imgui PUBLIC ${VENDOR_DIR}/imgui)
 target_sources(imgui PRIVATE
   ${VENDOR_DIR}/imgui/imconfig.h
   ${VENDOR_DIR}/imgui/imgui.h
+  ${VENDOR_DIR}/imgui/imnodes.h
+  ${VENDOR_DIR}/imgui/imnodes.cpp
+  
   ${VENDOR_DIR}/imgui/imgui.cpp
   ${VENDOR_DIR}/imgui/imgui_demo.cpp
   ${VENDOR_DIR}/imgui/imgui_draw.cpp
@@ -75,6 +78,8 @@ target_include_directories(stb INTERFACE ${VENDOR_DIR}/stb)
 
 # nfd https://github.com/aarcangeli/nativefiledialog-cmake
 add_subdirectory(${VENDOR_DIR}/nfd EXCLUDE_FROM_ALL)
+
+
 
 # Organize files
 include_directories(

@@ -38,6 +38,7 @@ class FxTask {
     FxTask(FxTaskType type) : type(type), isValidTask(false) {}
     
     virtual void RunTask(FxTaskInput input) = 0;
+    virtual void PrintTask() = 0;
 };
 
 class FxLoadTask : public FxTask {
@@ -55,6 +56,7 @@ class FxLoadTask : public FxTask {
     bool LoadTexture();
     void ClearTexture();
     virtual void RunTask(FxTaskInput input);
+    virtual void PrintTask();
 };
 
 class FxComputeTask : public FxTask {
@@ -72,6 +74,7 @@ class FxComputeTask : public FxTask {
     bool LoadShader();
     void ClearShader();
     virtual void RunTask(FxTaskInput input);
+    virtual void PrintTask();
 };
 
 #endif

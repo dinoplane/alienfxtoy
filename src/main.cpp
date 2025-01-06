@@ -20,9 +20,11 @@
 
 #include "imgui.h"
 
+
 #include "imgui_impl_sdl2.h"
 #include "imgui_impl_opengl3.h"
 
+#include "imnodes.h"
 
 #include <fx_ui.hpp>
 
@@ -105,6 +107,7 @@ int main(int, char**)
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImNodes::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -116,6 +119,7 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
+
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -189,6 +193,7 @@ int main(int, char**)
 
         FxUi::RenderFxGraphWindow(&graph, &graphUIState);
 
+
         // Rendering
         ImGui::Render();
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
@@ -200,6 +205,7 @@ int main(int, char**)
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImNodes::DestroyContext();
     ImGui::DestroyContext();
 
     SDL_GL_DeleteContext(gl_context);

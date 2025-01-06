@@ -67,7 +67,7 @@ class FxGraph {
     void addConnection(size_t srcNode, size_t dstNode);
     void RemoveConnection(size_t srcNode, size_t dstNode);
     void RunGraph();
-
+    void PrintGraph();  
 };
 
 

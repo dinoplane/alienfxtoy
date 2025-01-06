@@ -49,3 +49,9 @@ void FxComputeTask::RunTask(FxTaskInput input){
     }
 }
 
+void FxComputeTask::PrintTask(){
+    fmt::print("Compute Task\n");
+    fmt::print("Shader Path: {}\n", shaderPath);
+    fmt::print("Shader Loaded: {}\n", isShaderLoaded);
+    fmt::print("Task Valid: {}\n", isValidTask);
+}
